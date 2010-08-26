@@ -1,0 +1,38 @@
+﻿<html>
+<head>
+	<!--<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js"></script>-->
+	<script type="text/javascript" src="jquery-1.3.1.js"></script>
+
+	<script type="text/javascript" src="mochup.loader.js">
+
+		//(function(){var d,o={},defaults={scope:document.body,json:{url:"http://www.json.org/json2.js"},jquery:{url:"http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js",versions:{"1.3.1":true,"1.3.2":true}},mochup:{url:"http://www.softwareunity.com/mochup/jquery.mochup.js"}};for(var e in defaults){if(o[e]==d){o[e]=defaults[e]}};function onScriptLoaded(){alert(jQuery);if(o.jquery.wasAlreadyLoaded){loadPlugin(jQuery)}else{jQuery.noConflict()(loadPlugin)};function loadPlugin($){if((!window.JSON||!JSON.stringify)&&o.json.url)$.getScript(o.json.url);if(!$.fn.mochup){$.getScript(o.mochup.url,function(){$(o.scope).mochup()})}else{$(o.scope).mochup()}}};function loadScript(a,b){var c={loaded:1,interactive:1,complete:1,hasRun:0},script=document.createElement("SCRIPT");script.setAttribute("type","text/javascript");script.setAttribute("src",a);script.onload=b;script.onreadystatechange=function(){if(c[this.readyState]&&!c.hasRun){c.hasRun=true;b()}};document.getElementsByTagName('HEAD')[0].appendChild(script)};if(window.jQuery&&jQuery.fn&&jQuery.fn.live){o.jquery.wasAlreadyLoaded=true;onScriptLoaded()}else{loadScript(o.jquery.url,onScriptLoaded)}})();
+
+		//function onAfterSave(data){ alert(data) }
+
+		//jQuery.post("http://localhost:4000/splats/create", { name:"test4", data:"test5" }, onAfterSave);	//splat[name]
+		alert( jQuery );
+
+	</script>
+</head>
+
+<body style="height:100%;">
+	<input type="text" id="txt1"/>
+	<select>
+		<option>test1</option>
+		<option>test2</option>
+		<option>test3</option>
+	</select>
+	<div id="output"></div>
+	
+<!--
+	<div id="mochupControlPanel" class="mochupControlPanel" style="position:absolute;top:0;right:0;display:none;">
+		<input type="button" class="mochupToggleRecord" id="mochupToggleRecord" name="mochupToggleRecord" value="Record"/>
+		<input type="button" class="mochupTogglePlay"   id="mochupTogglePlay"   name="mochupTogglePlay"   value="Play"/>
+		<input type="button" class="mochupStop"         id="mochupStop"         name="mochupStop"   value="Stop"/>
+	</div>
+	
+	<div id="mochupPointer" class="mochupPointer" style="position:absolute;background-color:#fff;">X</div>
+-->
+</body>
+
+</html>

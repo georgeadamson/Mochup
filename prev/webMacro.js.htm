@@ -1,0 +1,68 @@
+﻿<html>
+<head>
+
+	<script type="text/javascript">
+
+	(function(){
+
+		var options	= {
+			scope	: document.body,
+			jquery	: { url : "http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js", isOk : {"1.3.2":1} },	//"http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js"
+			mochup	: { url : "jquery.mochup.js" }
+		};
+
+		function onScriptLoaded(){
+
+			// Proceed when jQuery has loaded:
+			if( window.jQuery ){ jQuery.noConflict()(function($){
+
+				if( !$.fn.mochup ){
+					$.getScript(options.mochup.url, function(){ $(options.scope).mochup(); });
+				}else{
+					$(options.scope).mochup();		
+				};
+
+			}); }
+		}
+
+		// Load remote script from specified url: (Execute callback when loaded)
+		function loadScript(url,onScriptLoaded){
+			var isScriptReady = {loaded:1,interactive:1,complete:1,hasRun:false}
+			var script = document.createElement("SCRIPT");
+			script.setAttribute("type","text/javascript");
+			script.setAttribute("src",url);
+			script.onload = onScriptLoaded;				// Mozilla.
+			script.onreadystatechange = function(){		// IE, Opera.
+				if ( isScriptReady[this.readyState] && !isScriptReady.hasRun ){
+					isScriptReady.hasRun = true;
+					onScriptLoaded();
+				};
+			}
+			document.getElementsByTagName('HEAD')[0].appendChild(script);
+		}
+
+		// Load jQuery library first if not already provided by the host page:
+		if( window.jQuery && jQuery.fn.jquery && options.jquery.isOk[jQuery.fn.jquery] ){
+			onScriptLoaded();
+		}else{
+			loadScript( options.jquery.url, onScriptLoaded );
+		};
+
+	})();
+
+	</script>
+
+</head>
+
+<body id="body">
+	<input type="text" id="txt1"/>
+	<div id="output"></div>
+	
+	<div id="mochupControls" style="position:absolute;top:0;right:0">
+		<input type="button" class="mochupRecord" id="mochupRecord" name="mochupRecord" value="Record"/>
+		<input type="button" class="mochupPlay"   id="mochupPlay"   name="mochupPlay"   value="Play"/>
+		<input type="button" class="mochupStop"   id="mochupStop"   name="mochupStop"   value="Stop"/>
+	</div>
+</body>
+
+</html>

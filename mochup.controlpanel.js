@@ -1,0 +1,4 @@
+﻿
+//alert("mochup.controlpanel.js loaded. " + jQuery);
+
+jQuery(document.body).append('<div id="mochupControlPanel" class="mochupControlPanel"><input type="button" class="mochupStop" id="mochupStop" name="mochupStop" value="x Stop" title="Stop"/><input type="button" class="mochupPlay" id="mochupPlay" name="mochupPlay" value="&gt; Play" title="Play"/><input type="button" class="mochupRecord" id="mochupRecord" name="mochupRecord" value="o Record" title="Record" altkey="R"/><style type="text/css">.mochupControlPanel{top:0;right:0;position:absolute;position:fixed;background-color:undefined;filter:alpha(opacity=90);opacity:0.9}.mochupPointer{width:26px;height:26px;position:absolute;background-color:transparent;filter:alpha(opacity=80);opacity:0.8}</style></div><img id="mochupPointer" class="mochupPointer" src="pointer.gif" alt="Fake mouse pointer"/>');
