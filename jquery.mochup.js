@@ -4,36 +4,38 @@
 
 $.fn.mochup = function( options, args ){
 
-	var undefined,			// Used when testing for undefined variables.
+	// TODO: Read options from url parameters?
+	// TODO: Plugin should allow for $(this).each.
+
+	// Prevent calls to console.log() causing error when firebug is not available:
+	var console = window.console || {}; if( !console.log ){ console.log = function(){} }
+
+	var undefined,			// Faster for comparing undefined variables using ===.
 		mochup	= {			// Hash of settings and flags for internal use: (Not to be confused with jQuery.fn.mochup.defaults)
 			startTime		: 0,
 			pauseTime		: 0,
 			playedTime		: 0,
 			pauseDuration	: 0,
-			$context		: this || $(document),	// Reference to the current context element.
+			$context		: this || $(window.document),	// Reference to the current context element.
 			$pointer		: null,		// Will be a reference to the fake mouse pointer element during playback.
 			eventType		: {},		// Will be populated with event specs at run time.
 			eventLog		: {},		// Will store recorded events.
 			logPosition		: 0,
 			freshEventLog	: { size:0, startTime:0, endTime:0, selectors:{}, data:[] },
-			pulseTimerID	: null,		// Will store a reference to the interval timer "pulse" used during recording and playback.
+			clockTimerID	: null,		// The id of the setInterval() timer "pulse" used during recording and playback.
+			nextPlayEventID	: null,		// The id of the setTimout() timer that will trigger the next event during playback.
 			nextSelectorIdx	: 1,		// Incremented internally while building lookup list of element selectors.
-			abbrLookup		: { s:'selector', e:'type', id:'id', n:'name', k:'keyCode', ak:'altKey', ck:'ctrlKey', mk:'metaKey', sk:'shiftKey', b:'button', x:'pageX', y:'pageY', d:'wheelDelta' },
+			abbrLookup		: { s:'selector', e:'type', id:'id', n:'name', c:'charCode', k:'keyCode', w:'which', ak:'altKey', ck:'ctrlKey', mk:'metaKey', sk:'shiftKey', b:'button', x:'pageX', y:'pageY', d:'wheelDelta' },	// Abbreviations must be 1 or 2 characters only.
 			isPaused		: false,
 			isPlaying		: false,
 			isRecording		: false,
 			isMethod		: { play:true,record:true,pause:true,stop:true,reset:true,destroy:true },		// List of valid mochup plugin method names.
 			namespace		: 'mochup',
-			document		: window.document,
-			body			: window.document.body,
 			timeNow			: function(){ return new Date().getTime(); }
+			
 		};
 
-	// Prevent calls to console.log() causing error when firebug is not available:
-	//if( !window.console ) var console = {}; if( !console.log ) console.log = function(){};
-
-
-	// Initialise eventLog: (and ensure options is not undefined so that the first call to doReset does not balk)
+	// Initialise eventLog: (after ensuring options is not undefined so that the first call to doReset does not balk)
 	options	= options || {};
 	doReset();
 	
@@ -52,6 +54,16 @@ $.fn.mochup = function( options, args ){
 		}
 	};
 
+	mochup.eventLog = {
+		"size":41,
+		"startTime":0,
+		"endTime":0,
+		"selectors":{"#mochupRecord":1,"#mochupStop":2,"BODY":3,"HTML":4,"#txt1":5},
+		"data":[{"t":171,"e":"mouseout","s":"#mochupRecord","button":0,"pageX":1116,"pageY":10},{"t":172,"e":"mouseover","s":"#mochupStop","button":0,"pageX":1116,"pageY":10},{"t":187,"e":"mouseout","s":"#mochupStop","button":0,"pageX":1020,"pageY":10},{"t":188,"e":"mouseover","s":"BODY","button":0,"pageX":1020,"pageY":10},{"t":470,"e":"mouseout","s":"BODY","button":0,"pageX":464,"pageY":0},{"t":471,"e":"mouseover","s":"HTML","button":0,"pageX":464,"pageY":0},{"t":487,"e":"mouseout","s":"HTML","button":0,"pageX":384,"pageY":-21},{"t":936,"e":"mouseover","s":"HTML","button":0,"pageX":10,"pageY":0},{"t":952,"e":"mouseout","s":"HTML","button":0,"pageX":13,"pageY":4},{"t":953,"e":"mouseover","s":"#txt1","button":0,"pageX":13,"pageY":4},{"t":1358,"e":"mousedown","s":"#txt1","button":0,"pageX":31,"pageY":16},{"t":1360,"e":"focus","s":"#txt1"},{"t":1423,"e":"mouseup","s":"#txt1","button":0,"pageX":31,"pageY":16},{"t":1425,"e":"click","s":"#txt1","button":0,"pageX":31,"pageY":16},{"t":1882,"e":"keydown","s":"#txt1","keyCode":"H","shiftKey":false},{"t":1883,"e":"keypress","s":"#txt1","keyCode":"h"},{"t":1945,"e":"keyup","s":"#txt1","keyCode":"H","shiftKey":false},{"t":2137,"e":"keydown","s":"#txt1","keyCode":"E","shiftKey":false},{"t":2138,"e":"keypress","s":"#txt1","keyCode":"e"},{"t":2225,"e":"keyup","s":"#txt1","keyCode":"E","shiftKey":false},{"t":2321,"e":"keydown","s":"#txt1","keyCode":"L","shiftKey":false},{"t":2322,"e":"keypress","s":"#txt1","keyCode":"l"},{"t":2409,"e":"keyup","s":"#txt1","keyCode":"L","shiftKey":false},{"t":2481,"e":"keydown","s":"#txt1","keyCode":"L","shiftKey":false},{"t":2482,"e":"keypress","s":"#txt1","keyCode":"l"},{"t":2594,"e":"keyup","s":"#txt1","keyCode":"L","shiftKey":false},{"t":2697,"e":"keydown","s":"#txt1","keyCode":"O","shiftKey":false},{"t":2698,"e":"keypress","s":"#txt1","keyCode":"o"},{"t":2761,"e":"keyup","s":"#txt1","keyCode":"O","shiftKey":false},{"t":3176,"e":"mouseout","s":"#txt1","button":0,"pageX":172,"pageY":-1},{"t":3177,"e":"mouseover","s":"HTML","button":0,"pageX":172,"pageY":-1},{"t":3178,"e":"mouseout","s":"HTML","button":0,"pageX":172,"pageY":-1},{"t":3227,"e":"mouseover","s":"HTML","button":0,"pageX":373,"pageY":4},{"t":3243,"e":"mouseout","s":"HTML","button":0,"pageX":442,"pageY":20},{"t":3244,"e":"mouseover","s":"BODY","button":0,"pageX":442,"pageY":20},{"t":4289,"e":"mouseout","s":"BODY","button":0,"pageX":1113,"pageY":19},{"t":4290,"e":"mouseover","s":"#mochupStop","button":0,"pageX":1113,"pageY":19},{"t":4788,"e":"mousedown","s":"#mochupStop","button":0,"pageX":1117,"pageY":13},{"t":4790,"e":"blur","s":"#txt1"},{"t":4866,"e":"mouseup","s":"#mochupStop","button":0,"pageX":1117,"pageY":13},{"t":4868,"e":"click","s":"#mochupStop","button":0,"pageX":1117,"pageY":13}]
+	}
+
+	mochup.eventLog = {"size":37,"startTime":0,"endTime":0,"selectors":{"#mochupRecord":1,"#mochupPlay":2,"#mochupStop":3,"BODY":4,"#txt1":5,"HTML":6},"data":[{"t":213,"e":"mouseout","s":"#mochupRecord","button":0,"pageX":1181,"pageY":7},{"t":214,"e":"mouseover","s":"#mochupPlay","button":0,"pageX":1181,"pageY":7},{"t":230,"e":"mouseout","s":"#mochupPlay","button":0,"pageX":1141,"pageY":7},{"t":230,"e":"mouseover","s":"#mochupStop","button":0,"pageX":1141,"pageY":7},{"t":276,"e":"mouseout","s":"#mochupStop","button":0,"pageX":808,"pageY":11},{"t":276,"e":"mouseover","s":"BODY","button":0,"pageX":808,"pageY":11},{"t":712,"e":"mouseout","s":"BODY","button":0,"pageX":113,"pageY":30},{"t":712,"e":"mouseover","s":"#txt1","button":0,"pageX":113,"pageY":30},{"t":1318,"e":"mousedown","s":"#txt1","button":0,"pageX":89,"pageY":15},{"t":1320,"e":"focus","s":"#txt1"},{"t":1419,"e":"mouseup","s":"#txt1","button":0,"pageX":89,"pageY":15},{"t":1421,"e":"click","s":"#txt1","button":0,"pageX":89,"pageY":15},{"t":2070,"e":"keydown","s":"#txt1","keyCode":"H","shiftKey":false},{"t":2071,"e":"keypress","s":"#txt1","keyCode":"x"},{"t":2135,"e":"keyup","s":"#txt1","keyCode":"H","shiftKey":false},{"t":3086,"e":"keydown","s":"#txt1","keyCode":"E","shiftKey":false},{"t":3087,"e":"keypress","s":"#txt1","keyCode":"e"},{"t":3159,"e":"keyup","s":"#txt1","keyCode":"E","shiftKey":false},{"t":4314,"e":"keydown","s":"#txt1","keyCode":"L","shiftKey":false},{"t":4315,"e":"keypress","s":"#txt1","keyCode":"l"},{"t":4382,"e":"keyup","s":"#txt1","keyCode":"L","shiftKey":false},{"t":4599,"e":"keydown","s":"#txt1","keyCode":"L","shiftKey":false},{"t":4600,"e":"keypress","s":"#txt1","keyCode":"l"},{"t":4695,"e":"keyup","s":"#txt1","keyCode":"L","shiftKey":false},{"t":5582,"e":"keydown","s":"#txt1","keyCode":"O","shiftKey":false},{"t":5583,"e":"keypress","s":"#txt1","keyCode":"o"},{"t":5670,"e":"keyup","s":"#txt1","keyCode":"O","shiftKey":false},{"t":6307,"e":"mouseout","s":"#txt1","button":0,"pageX":193,"pageY":7},{"t":6308,"e":"mouseover","s":"HTML","button":0,"pageX":193,"pageY":7},{"t":6341,"e":"mouseout","s":"HTML","button":0,"pageX":239,"pageY":-3},{"t":7354,"e":"mouseover","s":"HTML","button":0,"pageX":1087,"pageY":0},{"t":7453,"e":"mouseout","s":"HTML","button":0,"pageX":1091,"pageY":4},{"t":7454,"e":"mouseover","s":"#mochupStop","button":0,"pageX":1091,"pageY":4},{"t":7825,"e":"mousedown","s":"#mochupStop","button":0,"pageX":1106,"pageY":9},{"t":7827,"e":"blur","s":"#txt1"},{"t":7936,"e":"mouseup","s":"#mochupStop","button":0,"pageX":1106,"pageY":9},{"t":7938,"e":"click","s":"#mochupStop","button":0,"pageX":1106,"pageY":9}]}
+
 
 
 	// Respond when a command string is provided instead of options:
@@ -69,7 +81,8 @@ $.fn.mochup = function( options, args ){
 		}
 
 		// Play immediately if instructed to do so:
-		if( options.play ){	// TODO:
+		// TODO:
+		if( options.play ){
 
 			if( args ){
 				onLoad( args, options.username, options.password, doPlay );
@@ -81,19 +94,18 @@ $.fn.mochup = function( options, args ){
 		}
 
 
-	// Assume defaults where options not specified:
-	var defaults = $.fn.mochup.defaults;
-	options      = $.extend( false, {}, defaults, options );
-	extendOrReplace( options, 'player',   'events'     );
-	extendOrReplace( options, 'player',   'attributes' );
-	extendOrReplace( options, 'recorder', 'events'     );
-	extendOrReplace( options, 'recorder', 'attributes' );
+	// Assume defaults where options not specified and make aliases for our event helpers::
+	var defaults			   = $.fn.mochup.defaults; options = $.extend( false, {}, defaults, options );
+	var playerEvents		 = extendOrReplace( options, 'player',   'events'     ), // options.player.events
+		recorderEvents		 = extendOrReplace( options, 'player',   'attributes' ), // options.recorder.events
+		playerAttributes	 = extendOrReplace( options, 'recorder', 'events'     ), // options.player.attributes
+		recorderAttributes = extendOrReplace( options, 'recorder', 'attributes' ); // options.recorder.attributes
 
 	// Make aliases for our event specs:
-	var playerEvents		= options.player.events,
-		recorderEvents		= options.recorder.events,
-		playerAttributes	= options.player.attributes,
-		recorderAttributes	= options.recorder.attributes;
+	//var playerEvents		= options.player.events,
+	//	recorderEvents		= options.recorder.events,
+	//	playerAttributes	= options.player.attributes,
+	//	recorderAttributes	= options.recorder.attributes;
 
 
 	// Ensure any custom mochup callbacks are genuine functions: (So we don't waste time later having to check them while busy recording etc)
@@ -105,18 +117,13 @@ $.fn.mochup = function( options, args ){
 
 
 	// Copy any attribute reader functions into the event specs so we don't waste time looking for them during record or play:
-	$.each( playerAttributes, function(attr,fn){
-		$.each( playerEvents, function(name,eventSpec){
-			if( eventSpec && eventSpec.data && eventSpec.data[attr] === true ){
-				eventSpec.data[attr] = fn;
-			}
-		});
-	});
-	$.each( recorderAttributes, function(attr,fn){
-		$.each( recorderEvents, function(name,eventSpec){
-			if( eventSpec && eventSpec.data && eventSpec.data[attr] === true ){
-				eventSpec.data[attr] = fn;
-			}
+	$.each( ['player','recorder'], function(i,task){
+		$.each( options[task].attributes, function(attr,fn){
+			$.each( options[task].events, function(name,eventSpec){
+				if( eventSpec && eventSpec.data && eventSpec.data[attr] === true ){
+					eventSpec.data[attr] = fn;
+				}
+			});
 		});
 	});
 
@@ -132,8 +139,8 @@ $.fn.mochup = function( options, args ){
 		if( options.uiUrl ){
 
 			$.ajaxSetup({
-				dataType	: "html",
-				contentType	: "text/html"
+				dataType : "html",
+				contentType	: "text/html"	// Experiment!
 			});
 			$.getScript( options.uiUrl, function(html,txt){ $(html).appendTo(document.body).fadeIn("fast"); } );
 
@@ -146,17 +153,17 @@ $.fn.mochup = function( options, args ){
 
 
 	// Start the playback timer:
-	mochup.pulseTimerID = window.setInterval(pulse,100);
+	mochup.clockTimerID = window.setInterval(pulse,100);
 
 	// Bind or delegate each event recorder handler and generate a reverse-lookup hash for each event-type id:
 	// (We namespace the events (eg "click.mochup") to make life easier when we need to unbind them later.)
 	$.each( recorderEvents, function(type,eventSpec){
 
-		var typeId	= recorderEvents[type].id;
-		var bind	= recorderEvents[type].delegate ? 'live' : 'bind';
+		var typeID = eventSpec.id;
+		var bind   = eventSpec.delegate ? 'live' : 'bind';
 
 		$( eventSpec.target )[bind]( type + '.' + mochup.namespace, recordEvent );
-		mochup.eventType[typeId] = type;
+		mochup.eventType[typeID] = type;
 
 	});
 
@@ -180,8 +187,6 @@ $.fn.mochup = function( options, args ){
 			return;
 		}else if( mochup.isPlaying ){
 			// Play the next event(s):
-			var startTime = mochup.timeNow() - mochup.startTime;
-			//window.status = new Date(startTime).toLocaleTimeString();
 			playEvent();
 			updateProgressBar();
 		}else if( mochup.isRecording ){
@@ -203,11 +208,9 @@ $.fn.mochup = function( options, args ){
 			var eventSpec = recorderEvents[e.type];
 
 			// Derive a css selector that describes where to find this element in the dom:
-			var	sel	= e.target.id									// Test whether element has an id and
-					? '#' + e.target.id								// use the id if it has one.
-					: { 'BODY':1,'body':1 }[ e.target.tagName ]		// Test for body element and
-						? 'BODY'									// return a body selector if applicable
-						: deriveSelector.call( e.target );			// otherwise derive a css selector.
+			var	sel = ( e.target.id && '#'+e.target.id )							// Use element id if it has one,
+			       || { BODY:'BODY',HTML:'HTML' }[ e.target.tagName.toUpperCase() ]	// Check for root elements,
+			       || deriveSelector.call( e.target );								// Otherwise derive a css selector.
 
 			// Lookup an index for this element's selector: (Add a new one to the lookup if necessary. Storing the selector index alongside each recorded event helps reduce the log size)
 			// This only serves to keep the log file smaller by storing the selector once and referring to an index repeatedly instead.
@@ -274,15 +277,16 @@ $.fn.mochup = function( options, args ){
 
 			if( snapshot ){
 
-				type = mochup.eventType[snapshot.e];
+				type = isNaN(snapshot.e) ? snapshot.e : mochup.eventType[snapshot.e];
 
 				if( type ) {
 
-					var $elem = $( selectors[snapshot.s] );
+					var $elem = $( isNaN(snapshot.s) ? snapshot.s : selectors[snapshot.s] );
 
 					if( $elem.length ){
 
 						// Move our fake mouse pointer:
+						// TODO: Smarter positioning to allow for different screen size etc.
 						if( snapshot.x && snapshot.y && mochup.$pointer.length ){
 							mochup.$pointer.css({ left:snapshot.x, top:snapshot.y });
 						}
@@ -290,10 +294,11 @@ $.fn.mochup = function( options, args ){
 						// Create a new event object: (And remove our custom selector "s" attribute because it seems to upset things)
 						delete snapshot.s;
 						var Event = new $.Event(type);
+						Event.target = $elem[0];
 
 						// Copy snapshot event attributes to our new event object:
 						$.each( snapshot, function(abbr,val){
-							var attr = mochup.abbrLookup[abbr] || abbr;
+							var attr = abbr.length < 3 && mochup.abbrLookup[abbr] || abbr;
 							if( playerAttributes[attr] ){
 								val = playerAttributes[attr].call( $elem[0], snapshot );
 							}
@@ -301,9 +306,11 @@ $.fn.mochup = function( options, args ){
 						});
 
 
-						// TODO: Make these customisable options:
 						// Also set browser-specific alternatively-named attibutes: (Taking care not to override any that already have a value)
+						// Ensure readable keyCode is applied as a code not a letter:
+						// TODO: Make these customisable options:
 						if( Event.keyCode ){
+							if( /[a-z]/i.test(Event.keyCode) ){ Event.keyCode = Event.keyCode.charCodeAt(0) }
 							if( !Event.which ){ Event.which = Event.keyCode }
 							if( !Event.charCode ){ Event.charCode = Event.keyCode }
 						}
@@ -320,17 +327,15 @@ $.fn.mochup = function( options, args ){
 
 						// If this event's spec has a playback handler defined then run it now:
 						if( playerEvents[type] ){
+							log('Faking:', Event.type, $elem, Event);
 							playerEvents[type].call( Event.target, Event );
 						}
 
-						// FIRE the event:
+						// FIRE the native event:
 						// TODO: Think about triggering live events too.
-						// TODO: Figure out why Event.type is sometimes an event index number instead of an event name.
 						if( isNaN(Event.type) ){
-							//window.setTimeout( function(){
-								log(Event.type, $elem)
-								if( $elem ){ $elem.trigger(Event) }
-							//}, 0 );
+							log('Triggering:', Event.type, $elem, Event);
+							$elem.trigger(Event);
 						}
 
 					}
@@ -584,7 +589,7 @@ $.fn.mochup = function( options, args ){
 		// Proceed if no callback was specified in the options OR the callback does not return false to cancel this event:
 		if( !options.onDestroy || options.onDestroy() ) return false;
 
-		window.clearInterval(mochup.pulseTimerID);
+		window.clearInterval(mochup.clockTimerID);
 		doStop();
 		mochup.$context.find('*').add(window).unbind('.'+mochup.namespace).die('.'+mochup.namespace);
 
@@ -599,7 +604,32 @@ $.fn.mochup = function( options, args ){
 	}
 
 
-	// Helper to generate a reverse lookup for every key/value pair in the hash object:
+	// Helper to translate the event log to an array format: (Unless it is already an array)
+	// The opposite of getLogAsHash()
+	function getLogAsArray(){
+
+		if( mochup.eventLog.data.length ){ return mochup.eventLog.data; }
+
+		var newData = [];
+		$.each(mochup.eventLog.data, function(t,item){ item['t'] = t; newData.push(item) });
+		return newData;
+
+	}
+
+	// Helper to translate the event log to a hash format: (Unless it is already a hash)
+	// The opposite of getLogAsArray()
+	function getLogAsHash(){
+		
+		if( !mochup.eventLog.data.length ){ return mochup.eventLog.data; }
+
+		var newData = {};
+		$.each(mochup.eventLog.data, function(i,item){ var t = item.t; delete item.t; newData[t] = item });
+		return newData;
+		
+	}
+
+
+	// Helper to generate a REVERSE-lookup for every key/value pair in the hash object:
 	// (Apply filter function if provided. The value and key will be passed to it as parameters)
 	function invertHash(hash, optionalFilterFn){
 		return $.each(hash, function(key,val){
@@ -611,14 +641,14 @@ $.fn.mochup = function( options, args ){
 
 
 	// A wrapper for jQuery.extend() that conditionally replaces or extends a subset of options:
-	// The condition depends on the replaceDefaults option on each sub-group, eg: options.player.events.replaceDefaults.
-	// Sample usage: extendOrReplace('player','events');
-	function extendOrReplace(options,grp,subgrp){
+	// The condition depends on the replaceDefaults option on each subset, eg: options.player.events.replaceDefaults.
+	// Sample usage: extendOrReplace(options,'player','events');
+	function extendOrReplace(options,A,B){
 
-		var optGrp = options[grp] = ( options[grp] || {} ),
-		    optSub = optGrp[subgrp];
+		var optionsA = options[A] = ( options[A] || {} ),
+		    optionsB = optionsA[B];
 
-		return options[grp][subgrp] = ( optSub && optSub.replaceDefaults ) ? optSub : $.extend( {}, defaults[grp][subgrp], optSub );
+		return optionsA[B] = ( optionsB && optionsB.replaceDefaults ) ? optionsB : $.extend( {}, defaults[A][B], optionsB );
 
 	}
 
@@ -627,7 +657,7 @@ $.fn.mochup = function( options, args ){
 	function deriveSelector(){
 
 		var doc = this.ownerDocument, body = doc.body;
-		if ( this === body ) return 'BODY';
+		if ( this === body ){ return 'BODY' }
 		var elem = this, sel = getNodeSyntax(elem), context = mochup.$context[0], docElem = doc.documentElement;
 
 		// Search up the DOM until we reach either the root or a parent that has an ID:
@@ -646,10 +676,10 @@ $.fn.mochup = function( options, args ){
 	}
 
 
-	// Helper for logging an debugging:
+	// Helper for logging and debugging:
 	function log(args){
-		if( window.console && window.console.log ){
-			window.console.log.apply( this, ['Mochup:'].concat( $.makeArray(arguments) ) );
+		if( console && console.log ){
+			console.log.apply( this, ['Mochup:'].concat( $.makeArray(arguments) ) );
 		}
 	}
 
@@ -740,7 +770,7 @@ $.fn.mochup.defaults = {
 			keypress	: function(e){
 				// Allow for browser differences (Mozilla etc provide charCode in keypress event).
 				e.which = e.charCode = e.keyCode;
-				if( e.keyCode !== 8 ){
+				if( e.keyCode !== 8 ){console.log('KEYPRESS',e,this)
 					// Emulate user typing keys: (Skip backspace-delete because Mozilla actually adds it to the text string)
 					var val = $(this).val() || '';
 					var chr = isNaN(e.keyCode) ? e.keyCode : String.fromCharCode(e.keyCode);
